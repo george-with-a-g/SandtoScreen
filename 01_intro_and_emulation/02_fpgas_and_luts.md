@@ -1,142 +1,160 @@
-# 02. FPGAs and LUTs: Programmable Hardware Without Moving Silicon
+# 02. FPGAs and Look-Up Tables: Programmable Silicon Made Simple
 
-> *"If an ASIC is a statue carved from stone, an FPGA is a box of Lego bricks that you can assemble, tear down, and rebuild in seconds."*
-
----
-
-## 1. The Core Paradox
-
-When a factory manufactures a microchip (like your laptop's CPU), physical metal wires and silicon transistors are permanently baked into place. You cannot add a wire or change a gate.
-
-So how does a **Field-Programmable Gate Array (FPGA)** let you build custom processors, graphics pipelines, or network chips on a single physical chip that you can reconfigure on your desk?
-
-**The secret:** An FPGA does not rewire transistors. Instead, it uses **Look-Up Tables (LUTs)** and **SRAM memory** to emulate *any* boolean function.
+> **Goal:** Understand how a single physical chip can magically turn into an ARM processor, an arcade machine, or an AI accelerator without touching a soldering iron.
 
 ---
 
-## 2. The Look-Up Table (LUT): Emulating Gates with Memory
+## 📖 Jargon Buster (Read this first!)
 
-Any digital logic gate is completely defined by its **Truth Table**.
-
-For example, consider the function $Y = (A \land B) \lor C$:
-
-| Input $A$ | Input $B$ | Input $C$ | $Y$ (Output) | SRAM Address / Bit |
-| :---: | :---: | :---: | :---: | :---: |
-| 0 | 0 | 0 | **0** | Bit 0 |
-| 0 | 0 | 1 | **1** | Bit 1 |
-| 0 | 1 | 0 | **0** | Bit 2 |
-| 0 | 1 | 1 | **1** | Bit 3 |
-| 1 | 0 | 0 | **0** | Bit 4 |
-| 1 | 0 | 1 | **1** | Bit 5 |
-| 1 | 1 | 0 | **1** | Bit 6 |
-| 1 | 1 | 1 | **1** | Bit 7 |
-
-### How a 3-Input LUT (LUT3) Implements This:
-A LUT3 consists of:
-1. **8 bits of static RAM (SRAM)** storing the column of outputs: `0b11101010`.
-2. An **8-to-1 Multiplexer (MUX)** whose select lines are hooked up to inputs $A$, $B$, and $C$.
-
-```
-    Configuration Memory (SRAM)
-    ┌───┬───┬───┬───┬───┬───┬───┬───┐
-    │ 0 │ 1 │ 0 │ 1 │ 0 │ 1 │ 1 │ 1 │  (8 bits stored)
-    └───┴───┴───┴───┴───┴───┴───┴───┘
-      │   │   │   │   │   │   │   │
-     ─┴───┴───┴───┴───┴───┴───┴───┴─
-    \                              /
-     \       8-to-1 Multiplexer   /
-      \                          /
-       ────────────┬─────────────
-                   │
-                   ▼  Output Y
-               ┌───────┐
-      Inputs   │ A B C │ (Selects which of the 8 bits reaches Y)
-               └───────┘
-```
-
-When inputs change (e.g. $A=1, B=1, C=0$, which is address $6$), the multiplexer instantly routes the 6th SRAM bit (`1`) to the output pin.
-
-> **Key Insight:** To change the hardware behavior of an FPGA, you don't etch new silicon. You just write new bits into the SRAM configuration cells (a **bitstream**)!
+| Jargon Term | What it actually means in plain English |
+| :--- | :--- |
+| **FPGA** | *(Field-Programmable Gate Array)* A blank chip containing millions of tiny configurable cheat sheets and digital switches that you can reprogram anytime. |
+| **ASIC** | *(Application-Specific Integrated Circuit)* A permanent, custom-made chip (like an iPhone's A17 chip). Cannot be changed after factory manufacturing. |
+| **LUT (Look-Up Table)** | A tiny **cheat sheet memory**. Instead of calculating math with physical gates, it simply looks up the pre-calculated answer in a table. |
+| **Multiplexer (MUX)** | A **digital train track switch**. It has multiple input tracks, but only one output track. A control dial picks which input goes through. |
+| **Flip-Flop** | A **1-bit memory cell**. Think of it as a snapshot camera that captures a `0` or `1` on every tick of the clock and remembers it. |
+| **Clock** | A steady **metronome / heartbeat** (ticking millions of times per second) that synchronizes all actions across the entire computer. |
+| **Bitstream** | The configuration binary file (a stream of 1s and 0s) that is loaded into the FPGA to program all the cheat sheets and wire connections. |
 
 ---
 
-## 3. Adding Memory & Time: The D Flip-Flop
+## 1. The Big Problem: Silicon Chips Are Hard to Change
 
-A LUT alone can only compute **Combinational Logic** (instantaneous outputs based on current inputs, without memory of the past).
+When a factory manufactures an Intel or Apple CPU:
+- Microscopic wires and transistors are permanently etched onto a silicon wafer.
+- If an engineer finds a single hardware bug, the company has to spend millions of dollars and wait 6 months to make a new chip.
 
-To build processors and computers, we need **Sequential Logic** (storing state across clock cycles).
+**What if we could have a chip that can change its internal circuits in seconds?**
 
-This is achieved with a **D Flip-Flop (D-FF)**:
-
-```
-              ┌─────────┐
-    D (Data) ─┤ D     Q ├─ Q (Output: holds state)
-              │         │
-    Clock ───>│ >       │
-              └─────────┘
-```
-
-* On every rising edge of the **Clock** ($\uparrow$): The value at input $D$ is captured and copied to output $Q$.
-* Between clock ticks: The output $Q$ remains rock-solid and stable, even if $D$ fluctuates.
+That chip is an **FPGA**.
 
 ---
 
-## 4. The Basic FPGA Building Block: The Logic Cell / CLB
+## 2. The Big Secret: The Look-Up Table (LUT)
 
-FPGAs tile millions of identical blocks called **Configurable Logic Blocks (CLBs)** or **Logic Elements (LEs)** across the chip.
+An FPGA does **not** physically melt or rewire its silicon. 
 
-A single Logic Cell contains:
-1. **A LUT (typically 4-input or 6-input)**: Computes boolean logic.
-2. **A D Flip-Flop**: Stores the result on a clock edge if sequential logic is needed.
-3. **A Bypass MUX**: Allows the designer to use the raw combinational output directly, or use the registered (clocked) output.
-4. **Carry-Chain Logic**: Specialized fast silicon for high-speed arithmetic addition/subtraction.
+Instead, it replaces hardwired logic gates with a clever trick: **The Look-Up Table (LUT)**.
+
+### The Restaurant Menu Analogy
+Imagine a restaurant cashier who has to calculate bills.
+- **Approach A (Hardwired Gate):** The cashier performs manual multiplication and addition on paper every single time.
+- **Approach B (Look-Up Table):** The cashier keeps a **cheat sheet card** on the counter:
+  - If customer picks Combo 1 -> Charge 5 dollars
+  - If customer picks Combo 2 -> Charge 8 dollars
+  - If customer picks Combo 3 -> Charge 12 dollars
+
+The cashier doesn't do any math! They just **look up** the pre-written answer.
+
+---
+
+### How a 2-Input LUT (LUT2) Works
+
+Suppose we want to build an **AND gate** (A AND B):
 
 ```
-                  ┌──────────────────────────────────────────────┐
-                  │               FPGA LOGIC CELL                │
-                  │                                              │
-    Inputs A,B,C,D │   ┌────────┐                ┌──────────┐    │
-    ─────────────>│───┤  LUT4  ├──┬─────────────┤0         │    │
-                  │   └────────┘  │              │  BYPASS  ├───┼──> Combinational Out
-                  │               │   ┌───────┐  │   MUX    │    │
-                  │               └───┤D     Q├──┤1         │    │
-                  │                   │       │  └────┬─────┘    │
-    Clock ────────┼──────────────────>│ >     │       │          │
-                  │                   └───────┘   Config Bit     │
-                  └──────────────────────────────────────────────┘
+ Truth Table:
+ A | B | Result
+---|---|-------
+ 0 | 0 |   0    <-- Stored in memory Slot 0
+ 0 | 1 |   0    <-- Stored in memory Slot 1
+ 1 | 0 |   0    <-- Stored in memory Slot 2
+ 1 | 1 |   1    <-- Stored in memory Slot 3
+```
+
+Inside the FPGA, a **2-Input LUT** consists of:
+1. **4 tiny storage bits (SRAM)** holding the values `0, 0, 0, 1`.
+2. A **Multiplexer (Selector switch)** controlled by Input A and Input B:
+
+```
+  Stored Bits in Memory
+     [ 0 ] ── Slot 0 ──┐
+     [ 0 ] ── Slot 1 ──┤
+     [ 0 ] ── Slot 2 ──┼──[ Multiplexer ]─── Output
+     [ 1 ] ── Slot 3 ──┘         ▲
+                                 │
+                          Inputs A and B
+                     (Select which slot to read)
+```
+
+- If you set A=1 and B=1, the selector points to **Slot 3** and outputs **`1`**.
+- If you set A=0 and B=1, the selector points to **Slot 1** and outputs **`0`**.
+
+### What if you want an OR gate instead?
+You don't change the hardware! You simply overwrite the 4 memory slots with `0, 1, 1, 1`.
+Now the exact same silicon is an **OR gate**!
+
+> **Key Takeaway:** An FPGA implements any logic function simply by loading its truth table into memory slots.
+
+---
+
+## 3. Adding Memory: The Flip-Flop & The Clock
+
+A LUT can make decisions, but it cannot remember the past. As soon as its inputs change, its output changes.
+
+To build a real computer (like a counter or a CPU), we need **Memory** and **Time**.
+
+### The Clock: The Conductor of the Orchestra
+A **Clock** is a wire that continuously alternates between `0` and `1` like a metronome:
+```
+  1 ──┐   ┌──┐   ┌──┐   ┌──┐
+      │   │  │   │  │   │  │
+  0 ──┴───┘  └───┘  └───┘  └───
+       Tick   Tick   Tick   Tick
+```
+Every time the clock ticks (rises from `0` to `1`), the computer takes one coordinated step forward.
+
+---
+
+### The D Flip-Flop: The 1-Bit Camera
+
+A **D Flip-Flop** is a 1-bit memory box:
+- It has a **Data Input (D)**, a **Clock Input (CLK)**, and an **Output (Q)**.
+- **Rule:** On the exact instant the clock ticks (rising edge 0 -> 1), the Flip-Flop takes a "snapshot" of input `D` and holds that value at output `Q` until the next clock tick.
+
+```
+                  ┌────────────┐
+   Input (D) ────►│ D        Q ├────► Output (Q) [Remembers state]
+                  │            │
+   Clock (CLK) ──►│ >          │
+                  └────────────┘
+```
+
+By connecting the output of a Flip-Flop back into a LUT (with an adder rule), we get a **Counter**:
+- Tick 1: Output is `0` -> Next state calculated is `1`.
+- Tick 2: Flip-flop captures `1` -> Next state calculated is `2`.
+- Tick 3: Flip-flop captures `2` -> Next state calculated is `3`.
+
+---
+
+## 4. Inside a Logic Cell: The Basic Lego Brick
+
+An FPGA contains thousands of identical building blocks called **Logic Cells** (or Configurable Logic Blocks - CLBs).
+
+Each Logic Cell has:
+1. A **LUT** (to make logic decisions / truth tables).
+2. A **D Flip-Flop** (to remember values on clock ticks).
+3. A **Switch** (to choose whether to use the instant LUT result or the saved Flip-Flop result).
+
+```
+   Inputs ──► [ LUT ] ──┬───────────────[ Switch ]──► Output (Instant)
+                        │                     ▲
+                        └──► [ Flip-Flop ] ───┘
+                                   ▲
+       Clock ──────────────────────┘
 ```
 
 ---
 
-## 5. Connecting the Dots: The Routing Matrix
+## 5. Summary: How it all fits together
 
-Thousands of Logic Cells are arranged in a 2D grid. Between them sits a **Programmable Interconnect Matrix** consisting of horizontal/vertical wire channels and **Switch Boxes**:
-
-```
-      [ Logic Cell ] ─────── [ Switch Box ] ─────── [ Logic Cell ]
-            │                      │                      │
-            │                      │                      │
-      [ Switch Box ] ─────── [ Switch Box ] ─────── [ Switch Box ]
-            │                      │                      │
-            │                      │                      │
-      [ Logic Cell ] ─────── [ Switch Box ] ─────── [ Logic Cell ]
-```
-
-When you compile your design using FPGA software (Synthesis & Place-and-Route), the tools decide:
-1. Which LUTs compute which logic formulas.
-2. Which switch-box pass transistors are closed to physically connect the outputs of one cell to the inputs of another.
-
----
-
-## 6. Real-World Use Cases: Why not just use a CPU?
-
-| Domain | Why FPGAs are Used | Real-World Example |
+| Layer | What it does | Real-world equivalent |
 | :--- | :--- | :--- |
-| **High-Frequency Trading (HFT)** | Nanosecond reaction times; no operating system kernel or CPU interrupt jitter. | Processing market feeds and submitting orders in $< 50\text{ns}$. |
-| **ASIC / CPU Prototyping** | Testing a new chip design at hardware speeds before spending \$50M on silicon masks. | Apple & Intel prototyping next-gen CPUs on FPGA racks. |
-| **Aerospace & Defense** | Radiation-hardened reprogrammability; real-time parallel radar signal processing. | Mars rovers and satellite communication systems. |
-| **5G / Telecom & Video** | Real-time 8K video encoding/decoding and beamforming that would choke a CPU. | Telecom base station transceivers. |
+| **LUT (Look-Up Table)** | Computes logic rules | A restaurant order cheat sheet |
+| **D Flip-Flop** | Remembers values across clock ticks | A snapshot camera |
+| **Logic Cell** | Combines 1 LUT + 1 Flip-Flop | A single Lego brick |
+| **FPGA** | Millions of Logic Cells connected by programmable wires | A giant box of Lego bricks you can build anything from |
 
 ---
 
-👉 Next Step: **[`03_hardware_emulation.md`](./03_hardware_emulation.md)** (Why and how we emulate hardware with Verilator on your laptop)
+👉 Next Step: Read **[`03_hardware_emulation.md`](./03_hardware_emulation.md)** to see why we simulate this hardware in software (Verilator) on your laptop!

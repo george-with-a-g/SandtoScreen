@@ -63,7 +63,7 @@ make wave
 ```
 
 ### In GTKWave:
-1. In the **SST panel** (top left), click on `TOP` $\to$ `counter`.
+1. In the **SST panel** (top left), click on `TOP` -> `counter`.
 2. Select signals (`clk`, `reset`, `enable`, `count[3:0]`) and click **Append**.
 3. Click the **Zoom Fit** icon (magnifying glass with square) on the top toolbar to see the full timeline!
 
