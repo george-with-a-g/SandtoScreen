@@ -224,6 +224,105 @@ Now the computer counts cleanly: **0, 1, 2, 3... exactly one step per clock tick
 
 ---
 
+### F. Under the Hood: How Do Gates "Know" the Numbers 1, 2, 3?
+
+You might wonder: *A single wire can only have voltage (1) or no voltage (0). How does the circuit know what '2' or '3' is?*
+
+#### 1. A Single Wire Cannot Be "2"
+A single wire can only be `0` (0V) or `1` (5V). Therefore, **a single Flip-Flop can only count from 0 to 1**.
+
+To count to 2, 3, 4, and beyond, we bundle **multiple wires and multiple Flip-Flops side-by-side** using **Binary (Base 2)**:
+
+| Decimal Number | Wire 1 (Two's place) | Wire 0 (One's place) | What the voltage actually is |
+| :---: | :---: | :---: | :--- |
+| **0** | `0` | `0` | (0V on Wire 1, 0V on Wire 0) |
+| **1** | `0` | `1` | (0V on Wire 1, 5V on Wire 0) |
+| **2** | `1` | `0` | (5V on Wire 1, 0V on Wire 0) |
+| **3** | `1` | `1` | (5V on Wire 1, 5V on Wire 0) |
+
+To count up to 3, you use **2 Flip-Flops**.
+To count up to 15, you use **4 Flip-Flops** (like in our Verilog lab).
+
+---
+
+#### 2. How Logic Gates Do "Math" Without a Brain
+The circuit does not "understand" math. It is just electrical switches wired so that the **laws of physics produce the exact same outcome as arithmetic**.
+
+Look at adding two 1-bit numbers:
+```text
+0 + 0 = 0 (Sum = 0, Carry = 0)
+0 + 1 = 1 (Sum = 1, Carry = 0)
+1 + 0 = 1 (Sum = 1, Carry = 0)
+1 + 1 = 2 (in binary: 10 -> Sum = 0 on this wire, Carry = 1 to the next wire!)
+```
+
+Look closely at the patterns:
+- **The SUM output:** When inputs are different (0+1 or 1+0), Sum is `1`. When same, Sum is `0`.
+  👉 **That is literally an XOR gate!**
+- **The CARRY output:** It is ONLY `1` when BOTH inputs are `1` (1+1).
+  👉 **That is literally an AND gate!**
+
+---
+
+#### 3. The Physical "Half Adder" Circuit
+By pairing **1 XOR Gate** and **1 AND Gate**, you build a machine that physically adds binary numbers:
+
+```
+  Input A ──┬───────────────┐
+            │               ├──[ XOR Gate ]───► SUM Wire (One's place)
+  Input B ──┼───────────────┤
+            │               └──[ AND Gate ]───► CARRY Wire (Two's place)
+            └───────────────┘
+```
+
+If you put 5V on Input A and 5V on Input B:
+1. The XOR gate outputs 0V (`Sum = 0`).
+2. The AND gate outputs 5V (`Carry = 1`).
+3. Together the two wires output `1 0` in binary -> **Decimal 2**!
+
+---
+
+#### 4. Component-Level 2-Bit Counter Walkthrough
+
+Here is the complete hardware diagram for a 2-bit counter using **two Flip-Flops** (FF0 and FF1):
+
+```
+                   ┌──────────────┐
+                   │  Flip-Flop 1 │
+        ┌─────────►│ D1        Q1 ├─────┬───────► WIRE 1 (Two's Place)
+        │          │   Clock >    │     │
+        │          └──────────────┘     │
+        │                               │
+    [XOR Gate]◄── Q1                    │
+        ▲                               │
+        └── Carry (Q0)                  │
+                                        │
+                   ┌──────────────┐     │
+                   │  Flip-Flop 0 │     │
+        ┌─────────►│ D0        Q0 ├─────┴───────► WIRE 0 (One's Place)
+        │          │   Clock >    │
+        │          └──────────────┘
+        │                 │
+    [NOT Gate]◄───────────┘
+```
+
+- **Step 1 (Start at 0):** Both flip-flops hold `0`. Wires read `0 0` (Decimal 0).
+  - NOT gate prepares `1` at D0.
+  - XOR gate prepares `0` at D1.
+- **Step 2 (Clock Tick #1):** FF0 captures `1`, FF1 captures `0`.
+  - Wires read `0 1` (**Decimal 1**).
+  - NOT gate prepares `0` at D0.
+  - XOR gate sees Q1=0 and Q0=1, so (0 XOR 1 = 1), preparing **`1`** at D1.
+- **Step 3 (Clock Tick #2):** FF0 captures `0`, FF1 captures `1`.
+  - Wires read `1 0` (**Decimal 2**)!
+  - NOT gate prepares `1` at D0.
+  - XOR gate sees Q1=1 and Q0=0, so (1 XOR 0 = 1), preparing `1` at D1.
+- **Step 4 (Clock Tick #3):** FF0 captures `1`, FF1 captures `1`.
+  - Wires read `1 1` (**Decimal 3**)!
+- **Step 5 (Clock Tick #4):** Rolls over back to `0 0` (Decimal 0), and the cycle repeats!
+
+---
+
 ## 4. Inside a Logic Cell: The Basic Lego Brick
 
 An FPGA contains thousands of identical building blocks called **Logic Cells** (or Configurable Logic Blocks - CLBs).
