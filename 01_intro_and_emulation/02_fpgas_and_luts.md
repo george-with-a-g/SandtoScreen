@@ -1,5 +1,10 @@
 # 02. FPGAs and Look-Up Tables: Programmable Silicon Made Simple
 
+---
+### 🧭 Chapter 1 Quick Links
+[🏠 Section 1 Overview](./README.md) • [01. Transistors to Gates](./01_transistors_to_gates.md) • [02. FPGAs & LUTs](./02_fpgas_and_luts.md) • [03. Hardware Emulation](./03_hardware_emulation.md) • [04. Anatomy of a Chip](./04_anatomy_of_a_chip.md) • [🧪 C++ Toy Sim](./conceptual_toy_emulator/README.md) • [🔬 Verilator Lab](./lab_verilator/README.md)
+---
+
 > **Goal:** Understand how a single physical chip can magically turn into an ARM processor, an arcade machine, or an AI accelerator without touching a soldering iron.
 
 ---
@@ -190,6 +195,156 @@ A **D Flip-Flop** is the turnstile that solves the runaway problem.
 
 ---
 
+### D.1. Zooming Inside the Flip-Flop (From Transistors to Silicon)
+
+How is a D Flip-Flop physically built inside a chip? Here is the exact hierarchy from raw silicon up to the flip-flop:
+
+```
+LEVEL 0: Physical Transistors (NMOS & PMOS switches)
+   │
+   ▼ (Form pull-up and pull-down networks)
+LEVEL 1: Basic Logic Gates (NOT & NAND)
+   │
+   ▼ (Cross-coupled feedback loop)
+LEVEL 2: The D-Latch (Level-sensitive 1-bit memory)
+   │
+   ▼ (Two latches paired as Master and Slave)
+LEVEL 3: The Edge-Triggered D Flip-Flop (Clocked 1-bit turnstile)
+```
+
+---
+
+#### Level 0: The Transistor Building Blocks
+
+##### 1. The CMOS NOT Gate (2 Transistors)
+One PMOS on top (pull-up to Power) and one NMOS on bottom (pull-down to Ground):
+
+```
+                     Power (VDD / 5V)
+                            │
+                      ┌─────┴─────┐
+                      │   PMOS    │ (Pull-Up Switch)
+         Input (A) ───┤o          │ (Turns ON when A = 0)
+                      └─────┬─────┘
+                            │
+                            ├──────────────────► Output (Y = NOT A)
+                            │
+                      ┌─────┴─────┐
+                      │   NMOS    │ (Pull-Down Switch)
+         Input (A) ───┤           │ (Turns ON when A = 1)
+                      └─────┬─────┘
+                            │
+                     Ground (GND / 0V)
+```
+
+---
+
+##### 2. The CMOS NAND Gate (4 Transistors)
+Two PMOS in parallel on top, and two NMOS in series on bottom:
+
+```
+                          Power (VDD / 5V)
+                        ┌────────┴────────┐
+                        │                 │
+                  ┌─────┴─────┐     ┌─────┴─────┐
+                  │  PMOS A   │     │  PMOS B   │  (Parallel Pull-Up:
+     Input (A) ───┤o          │     │          o├── Input (B)
+                  └─────┬─────┘     └─────┬─────┘   either can pull to VDD)
+                        │                 │
+                        └────────┬────────┘
+                                 │
+                                 ├──────────────────────► Output (Y = NAND A, B)
+                                 │
+                           ┌─────┴─────┐
+                           │  NMOS A   │
+              Input (A) ───┤           │            (Series Pull-Down:
+                           └─────┬─────┘             BOTH must be ON
+                                 │                   to drain to Ground)
+                           ┌─────┴─────┐
+                           │  NMOS B   │
+              Input (B) ───┤           │
+                           └─────┬─────┘
+                                 │
+                          Ground (GND / 0V)
+```
+
+---
+
+#### Level 1: The Cross-Coupled SR Latch (Memory Loop)
+Two NAND gates connected so each gate feeds into the other:
+```
+           ┌──────────┐
+  Set ────►│  NAND 1  ├──┬──────► Q (Stored Bit)
+           │          │  │
+       ┌──►│          │  │
+       │   └──────────┘  │ (Feedback wire)
+       │                 │
+       │   ┌──────────┐  │ (Feedback wire)
+       └───┤  NAND 2  │◄─┘
+  Reset ──►│          ├─────────► !Q (Inverted Bit)
+           └──────────┘
+```
+- **Component count:** 2 NAND Gates = **8 Transistors**.
+- **How it works:** When Set and Reset are idle, the two gates hold each other in a stable electronic loop forever.
+
+---
+
+#### Level 2: The Level-Sensitive D Latch (Adding an "Enable Door")
+To control *when* data can be written into the SR latch, we add two "steering" NAND gates and an inverter:
+```
+                     ┌─────────┐
+    Data (D) ───────►│  NAND 1 ├─────────┐
+                     │ (Door)  │         │
+                 ┌──►│         │         ▼
+                 │   └─────────┘    ┌─────────┐
+   Enable (CLK) ─┤                  │  NAND 3 ├──┬──► Q (Output)
+                 │   ┌─────────┐ ┌─►│ (Memory)│  │
+                 └──►│  NAND 2 │ │  └─────────┘  │
+                     │ (Door)  ├─┘       ▲       │
+  Data Inverted ────►│         │         │ (Loop)│
+                     └─────────┘    ┌────┴────┐  │
+                                    │  NAND 4 │◄─┘
+                                    │ (Memory)├─────► !Q
+                                    └─────────┘
+```
+- **Component count:** 4 NAND Gates + 1 NOT Gate = **18 Transistors**.
+- **Behavior:** When Enable is `1`, whatever is at `D` flows through to `Q`. When Enable is `0`, the door closes and `Q` remembers its last state.
+
+---
+
+#### Level 3: The Master-Slave D Flip-Flop (The "Air Lock" Turnstile)
+A single latch is "level-sensitive" (stays open as long as Enable is 1). To make it trigger **only on the exact instant of the clock rising edge (0 -> 1)**, we connect **two latches in series with an inverted clock**:
+
+```
+                   ┌────────────────────────────────────────────────────────┐
+                   │               D FLIP-FLOP (34 Transistors)             │
+                   │                                                        │
+                   │   ┌──────────────────┐          ┌──────────────────┐   │
+   Input (D) ─────►├───┤   MASTER LATCH   ├─────────►│   SLAVE LATCH    ├───┼──► Output (Q)
+                   │   │ (Active on CLK=0)│          │ (Active on CLK=1)│   │
+                   │   └────────┬─────────┘          └────────┬─────────┘   │
+                   │            │                             │             │
+   Clock (CLK) ────┼────────────┴────────[ NOT Gate ]─────────┘             │
+                   │                                                        │
+                   └────────────────────────────────────────────────────────┘
+```
+
+1. **When CLK = 0:**
+   - Master Latch door is **OPEN** -> captures incoming data `D`.
+   - Slave Latch door is **LOCKED** -> output `Q` does not change.
+2. **When CLK flips to 1 (Rising Edge):**
+   - Master Latch door **SLAMS SHUT** -> traps the captured data.
+   - Slave Latch door **OPENS** -> passes the trapped data out to `Q`.
+
+Because both doors are never open at the same time, data can never race through uncontrollably!
+
+* **Total Count for 1 Flip-Flop:**
+  - 8 NAND Gates (8 * 4 = 32 transistors)
+  - 1 NOT Gate (1 * 2 = 2 transistors)
+  - **Total: 9 Logic Gates = 34 MOSFET Transistors.**
+
+---
+
 ### E. Putting It Together: A Working 1-Step Counter
 
 Now look at how clean and controlled counting becomes when we pair an **Adder** with a **Flip-Flop**:
@@ -353,4 +508,8 @@ Each Logic Cell has:
 
 ---
 
-👉 Next Step: Read **[`03_hardware_emulation.md`](./03_hardware_emulation.md)** to see why we simulate this hardware in software (Verilator) on your laptop!
+## 🧭 Navigation
+| ⬅️ Previous Guide | 🏠 Overview | ➡️ Next Guide |
+| :--- | :---: | ---: |
+| [⬅️ 01. Transistors to Gates](./01_transistors_to_gates.md) | [Section 1 Hub](./README.md) | [03. Hardware Emulation ➡️](./03_hardware_emulation.md) |
+

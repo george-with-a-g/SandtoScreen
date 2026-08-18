@@ -1,5 +1,10 @@
 # 01. From Switches to Logic Gates: How Computers Think
 
+---
+### 🧭 Chapter 1 Quick Links
+[🏠 Section 1 Overview](./README.md) • [01. Transistors to Gates](./01_transistors_to_gates.md) • [02. FPGAs & LUTs](./02_fpgas_and_luts.md) • [03. Hardware Emulation](./03_hardware_emulation.md) • [04. Anatomy of a Chip](./04_anatomy_of_a_chip.md) • [🧪 C++ Toy Sim](./conceptual_toy_emulator/README.md) • [🔬 Verilator Lab](./lab_verilator/README.md)
+---
+
 > **Goal:** Understand how physical electricity turns into logic ("YES", "NO", "AND", "OR") without drowning in engineering jargon.
 
 ---
@@ -177,6 +182,27 @@ Input B ──┘
 
 ---
 
+## 3.1. Master CMOS Logic Gate Summary Table
+
+Here is the complete reference table showing how every standard logic gate is physically constructed in silicon using **PMOS** (pull-up) and **NMOS** (pull-down) transistors:
+
+| Gate Type | Inputs | Top Switches (PMOS) | Bottom Switches (NMOS) | Internal Silicon Construction | Total Transistors |
+| :--- | :---: | :--- | :--- | :--- | :---: |
+| **NOT (Inverter)** | **1** (A) | 1 PMOS | 1 NMOS | Single complementary stage | **2** |
+| **NAND** | **2** (A, B) | 2 PMOS (Parallel) | 2 NMOS (Series) | Natural CMOS inverting stage | **4** |
+| **NOR** | **2** (A, B) | 2 PMOS (Series) | 2 NMOS (Parallel) | Natural CMOS inverting stage | **4** |
+| **AND** | **2** (A, B) | 2 PMOS + 1 PMOS inverter | 2 NMOS + 1 NMOS inverter | Built as `[NAND (4)]` + `[NOT (2)]` | **6** |
+| **OR** | **2** (A, B) | 2 PMOS + 1 PMOS inverter | 2 NMOS + 1 NMOS inverter | Built as `[NOR (4)]` + `[NOT (2)]` | **6** |
+| **XOR** | **2** (A, B) | 4 PMOS network | 4 NMOS network | Built with complementary transmission gates | **8 to 12** |
+| **XNOR** | **2** (A, B) | 4 PMOS network | 4 NMOS network | Built as `[XOR]` + `[NOT]` or transmission gates | **8 to 12** |
+| **3-Input NAND** | **3** (A, B, C) | 3 PMOS (Parallel) | 3 NMOS (Series) | Natural 3-input inverting stage | **6** |
+
+> **Key Rule of CMOS:** 
+> - Inverting gates (**NOT, NAND, NOR**) are **single-stage** (fewer transistors).
+> - Non-inverting gates (**AND, OR**) require an extra **NOT inverter stage** added to the end, making them cost 2 extra transistors!
+
+---
+
 ## 4. How Physical Switches Form Logic
 
 Let's look at how switches physically create these rules with a battery and a light bulb:
@@ -331,4 +357,8 @@ Before moving to the next file, make sure you can answer these:
 
 ---
 
-👉 Next Step: Read **[`02_fpgas_and_luts.md`](./02_fpgas_and_luts.md)** to see how FPGAs configure these gates without rewiring silicon!
+## 🧭 Navigation
+| ⬅️ Previous | 🏠 Overview | ➡️ Next Guide |
+| :--- | :---: | ---: |
+| [🏠 Section 1 Overview](./README.md) | [Section 1 Hub](./README.md) | [02. FPGAs & Look-Up Tables ➡️](./02_fpgas_and_luts.md) |
+

@@ -1,5 +1,10 @@
 # 03. Hardware Emulation: Simulating Silicon on Your Laptop
 
+---
+### 🧭 Chapter 1 Quick Links
+[🏠 Section 1 Overview](./README.md) • [01. Transistors to Gates](./01_transistors_to_gates.md) • [02. FPGAs & LUTs](./02_fpgas_and_luts.md) • [03. Hardware Emulation](./03_hardware_emulation.md) • [04. Anatomy of a Chip](./04_anatomy_of_a_chip.md) • [🧪 C++ Toy Sim](./conceptual_toy_emulator/README.md) • [🔬 Verilator Lab](./lab_verilator/README.md)
+---
+
 > **Goal:** Understand how we test and run digital hardware designs on a normal laptop without buying physical chips.
 
 ---
@@ -130,6 +135,10 @@ You have all the foundational concepts:
 3. **FPGAs & LUTs** store truth tables in memory to mimic any circuit.
 4. **Verilator** runs and tests these circuits on your laptop.
 
-### Try the two labs:
-1. **Instant C++ Demo:** Run [`conceptual_toy_emulator/`](./conceptual_toy_emulator/) with `make run` to see transistors -> gates -> counter in action.
-2. **Verilator Lab:** Follow [`lab_verilator/README.md`](./lab_verilator/README.md) to run real Verilog simulation and see waveform traces!
+---
+
+## 🧭 Navigation
+| ⬅️ Previous Guide | 🏠 Overview | ➡️ Next Guide |
+| :--- | :---: | ---: |
+| [⬅️ 02. FPGAs & LUTs](./02_fpgas_and_luts.md) | [Section 1 Hub](./README.md) | [04. Anatomy of a Microchip ➡️](./04_anatomy_of_a_chip.md) |
+
