@@ -361,6 +361,44 @@ To switch a 4-bit bus (A[3:0] vs B[3:0]), we align **four 1-Bit MUX slices** tha
 
 ---
 
+### 📏 The Simple Rule: MUX Inputs and Outputs
+
+| MUX Type | Input Wires | Select Wires | Output Wires |
+| :--- | :---: | :---: | :---: |
+| **1-Bit 2-to-1 MUX** | 2 (one per choice) | 1 | **1** |
+| **4-Bit 2-to-1 MUX** | 8 (four per choice) | 1 | **4** |
+| **8-Bit 2-to-1 MUX** | 16 (eight per choice) | 1 | **8** |
+
+> **The output always has the same number of wires as the bit-width!**
+> A MUX never compresses or expands data — it just **chooses** which set of wires to pass through.
+
+---
+
+### 🔀 Where MUXes Are Used in a Full CPU (ARM7)
+
+In `counter.v`, the MUX only has one job: choose between `count + 1` and `0000` (reset). But in a full CPU the exact same MUX circuit is used everywhere to make routing decisions based on instructions:
+
+| Chip | MUX is choosing between... |
+| :--- | :--- |
+| **`counter.v`** | `count + 1` (normal) vs `0000` (reset) |
+| **CPU Program Counter** | `PC + 4` (next instruction) vs jump address (branch instruction) |
+| **CPU ALU Input** | Register value vs Immediate constant from instruction |
+| **CPU Write-Back** | ALU result vs RAM value (which one gets saved into a Register) |
+| **CPU Register File** | Which of the 16 registers (`R0`-`R15`) to read from |
+
+---
+
+### 💡 The Key Insight
+
+A MUX doesn't know or care **what** the values mean. It only ever answers one question:
+
+> **"Which of these inputs should I connect to the output right now?"**
+
+* In `counter.v` that question is: *"Should I count or reset?"*
+* In a CPU that question might be: *"Should I jump to a new address or keep going to the next instruction?"*
+
+---
+
 ## 💾 4. What is a Register? (Memory Storage)
 
 A **Register** is simply a group of **D Flip-Flops** working side-by-side to store an N-bit number.
