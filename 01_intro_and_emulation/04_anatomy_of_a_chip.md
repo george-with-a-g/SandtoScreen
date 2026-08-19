@@ -313,11 +313,15 @@ The **Multiplexer (MUX)** is the decision-making switchboard of the chip. In [`c
 
 ---
 
-### Step 3.1: Level 1 — The 1-Bit 2-to-1 MUX
-Selects between 1-bit Input A and 1-bit Input B using a Select wire (S):
-```text
+### Step 3.1: Level 1 — The 1-Bit 2-to-1 MUX (With Real Values!)
+
+A 1-Bit MUX has **one job**: given two candidate wires (A and B) and a Select wire (S), output only one of them.
+
+```
 Output = (A AND NOT S) OR (B AND S)
 ```
+
+It is made of 4 gates: **1 NOT + 2 AND + 1 OR**.
 
 ```
                        ┌─────────┐
@@ -332,31 +336,106 @@ Output = (A AND NOT S) OR (B AND S)
     Select (S) ───────►│         │
                        └─────────┘
 ```
-* If S = 0: `AND 1` is enabled -> Output is **Input A**.
-* If S = 1: `AND 2` is enabled -> Output is **Input B**.
-* **Components per 1-bit MUX:** 2 AND + 1 OR (+ 1 shared NOT) = **18 Transistors**.
 
 ---
 
-### Step 3.2: Level 2 — The 4-Bit 2-to-1 Multiplexer
-To switch a 4-bit bus (A[3:0] vs B[3:0]), we align **four 1-Bit MUX slices** that all share the exact same Select wire (S):
+#### 🔵 Case 1: Select = 0 (Pass Input A through)
+
+Let's say `Input A = 1`, `Input B = 0`, `Select (S) = 0`.
 
 ```
-                            Select Wire (S)
-                                 │
-                            [ NOT Gate ] (Shared Inverter: 2 Transistors)
-                             │        │
-                     (Inverted S)   (Raw S)
-                             │        │
-   ┌─────────────────────────┼────────┼─────────────────────────┐
-   │ Bit 3:  2 AND + 1 OR ◄──┴────────┘  (Output Y[3])          │
-   │ Bit 2:  2 AND + 1 OR ◄──┴────────┘  (Output Y[2])          │
-   │ Bit 1:  2 AND + 1 OR ◄──┴────────┘  (Output Y[1])          │
-   │ Bit 0:  2 AND + 1 OR ◄──┴────────┘  (Output Y[0])          │
-   └────────────────────────────────────────────────────────────┘
+   NOT Gate:   NOT(S)  = NOT(0) = 1   (Inverted select)
+
+   AND Gate 1: A AND NOT(S)  =  1 AND 1  =  1   ──► A is UNBLOCKED!
+   AND Gate 2: B AND S       =  0 AND 0  =  0   ──► B is BLOCKED!
+
+   OR Gate:    1 OR 0 = 1
+
+   OUTPUT = 1  (Input A passed through)   ✅
 ```
 
-* **Grand Total for 4-Bit MUX:** 
+---
+
+#### 🟢 Case 2: Select = 1 (Pass Input B through)
+
+Same inputs: `Input A = 1`, `Input B = 0`, but now `Select (S) = 1`.
+
+```
+   NOT Gate:   NOT(S)  = NOT(1) = 0   (Inverted select)
+
+   AND Gate 1: A AND NOT(S)  =  1 AND 0  =  0   ──► A is BLOCKED!
+   AND Gate 2: B AND S       =  0 AND 1  =  0   ──► B is UNBLOCKED (but B itself is 0)
+
+   OR Gate:    0 OR 0 = 0
+
+   OUTPUT = 0  (Input B passed through)   ✅
+```
+
+> Notice: AND Gate 2 "unblocked" Input B's path, but because B itself was `0`, the output is `0`.
+> The MUX is NOT forcing the output to `1` or `0` — it is just choosing **which input to believe**.
+
+---
+
+#### 📌 1-Bit MUX Summary
+
+| Select (S) | AND Gate 1 Result | AND Gate 2 Result | OR Output | Which Input Passed? |
+| :---: | :---: | :---: | :---: | :---: |
+| `0` | `A AND 1 = A` | `B AND 0 = 0` | `A OR 0 = A` | **Input A** |
+| `1` | `A AND 0 = 0` | `B AND 1 = B` | `0 OR B = B` | **Input B** |
+
+* **Components per 1-bit MUX:** 1 NOT + 2 AND + 1 OR = **18 Transistors**.
+
+---
+
+### Step 3.2: Level 2 — The 4-Bit 2-to-1 Multiplexer (With Real Values!)
+
+A 4-Bit MUX is just **four 1-Bit MUX slices working in parallel**, all sharing the same ONE Select wire.
+
+**The Worked Example: Counter has just reached `0101` (decimal 5). The Adder produced `0110` (decimal 6). Reset is not pressed (reset = 0).**
+
+```
+   Input A (from Adder):  0110   (count + 1 = 6)
+   Input B (hardwired):   0000   (the reset value)
+   Select (S = reset):    0      (reset NOT pressed)
+
+   Question: Which 4-bit value passes to the Flip-Flops?
+```
+
+Here is how each of the 4 1-Bit MUX slices handles ONE bit at a time:
+
+```
+   Select Wire (S) = 0
+        │
+   [ NOT Gate ]  →  NOT(0) = 1  (Shared: only one NOT gate for all 4 slices!)
+    │          │
+  (NOT S = 1) (S = 0)
+    │          │
+
+   Bit 3:  A[3]=0, B[3]=0  →  (0 AND 1) OR (0 AND 0)  =  0 OR 0  =  Y[3] = 0
+   Bit 2:  A[2]=1, B[2]=0  →  (1 AND 1) OR (0 AND 0)  =  1 OR 0  =  Y[2] = 1
+   Bit 1:  A[1]=1, B[1]=0  →  (1 AND 1) OR (0 AND 0)  =  1 OR 0  =  Y[1] = 1
+   Bit 0:  A[0]=0, B[0]=0  →  (0 AND 1) OR (0 AND 0)  =  0 OR 0  =  Y[0] = 0
+
+   OUTPUT: Y[3] Y[2] Y[1] Y[0] = 0110 = Decimal 6   ✅
+   (The Adder's result passed through — the counter will advance to 6!)
+```
+
+Now what if the user presses Reset (Select S = 1)?
+
+```
+   Select Wire (S) = 1
+   NOT(1) = 0
+
+   Bit 3:  A[3]=0, B[3]=0  →  (0 AND 0) OR (0 AND 1)  =  0 OR 0  =  Y[3] = 0
+   Bit 2:  A[2]=1, B[2]=0  →  (1 AND 0) OR (0 AND 1)  =  0 OR 0  =  Y[2] = 0
+   Bit 1:  A[1]=1, B[1]=0  →  (1 AND 0) OR (0 AND 1)  =  0 OR 0  =  Y[1] = 0
+   Bit 0:  A[0]=0, B[0]=0  →  (0 AND 0) OR (0 AND 1)  =  0 OR 0  =  Y[0] = 0
+
+   OUTPUT: Y[3] Y[2] Y[1] Y[0] = 0000 = Decimal 0   ✅
+   (The reset value passed through — the counter resets to 0!)
+```
+
+* **Grand Total for 4-Bit MUX:**
   * 1 NOT Gate + 8 AND Gates + 4 OR Gates = **13 Logic Gates = ~74 Transistors**.
 
 ---
@@ -406,6 +485,11 @@ A **Register** is simply a group of **D Flip-Flops** working side-by-side to sto
 * A **4-Bit Register** contains **4 D Flip-Flops** (FF3, FF2, FF1, FF0).
 * A **32-Bit CPU Register** contains **32 D Flip-Flops**.
 
+Think of a single D Flip-Flop like a **snapshot camera shutter**:
+* Between clock ticks: the camera viewfinder shows the outside world, but the PHOTO has not been taken yet.
+* On the rising clock edge: **CLICK!** The shutter fires — the current value is permanently captured.
+* After the tick: the camera holds the old photo frozen, no matter what changes outside.
+
 ---
 
 ### The 3 Control Pins and What They Physically Do:
@@ -415,6 +499,45 @@ A **Register** is simply a group of **D Flip-Flops** working side-by-side to sto
 | **Clock (`clk`)** | Connected to the clock pin of **all 4 Flip-Flops**. | The universal heartbeat. On the rising edge (0 -> 1), all 4 Flip-Flops snap their doors shut, capturing the new 4-bit value simultaneously. |
 | **Reset (`reset`)** | Connected to the **Select wire (S) of the 4-Bit MUX**. | When `reset = 1`, it forces the MUX to select `4'b0000`, draining all 4 Flip-Flops to zero on the next clock tick. |
 | **Enable (`enable`)** | Connected to a second MUX stage. | When `enable = 0`, the MUX routes the **old count back into the Flip-Flops**, freezing the counter in place. |
+
+---
+
+### What Happens Inside a Flip-Flop on a Clock Tick (Worked Example!)
+
+**The Scenario:** The counter currently holds `0101` (decimal 5). The MUX has chosen the value `0110` (decimal 6) to write in. The clock ticks!
+
+```
+   BEFORE THE CLOCK TICK:
+   ┌──────────────────────────────────────────────────────┐
+   │         4-BIT REGISTER (holding "0101")              │
+   │  ┌───────┐  ┌───────┐  ┌───────┐  ┌───────┐          │
+   │  │  FF3  │  │  FF2  │  │  FF1  │  │  FF0  │          │
+   │  │  Q=0  │  │  Q=1  │  │  Q=0  │  │  Q=1  │          │
+   │  │  D=0  │  │  D=1  │  │  D=1  │  │  D=0  │          │
+   │  └───────┘  └───────┘  └───────┘  └───────┘          │
+   │  (D input: next value "0110" is waiting at the door!) │
+   └──────────────────────────────────────────────────────┘
+
+   ⚡ CLOCK RISING EDGE FIRES! (0V → 5V on the clock wire)
+
+   AFTER THE CLOCK TICK:
+   ┌──────────────────────────────────────────────────────┐
+   │         4-BIT REGISTER (now holds "0110")            │
+   │  ┌───────┐  ┌───────┐  ┌───────┐  ┌───────┐          │
+   │  │  FF3  │  │  FF2  │  │  FF1  │  │  FF0  │          │
+   │  │  Q=0  │  │  Q=1  │  │  Q=1  │  │  Q=0  │          │
+   │  └───────┘  └───────┘  └───────┘  └───────┘          │
+   │  The snapshot was taken! Q now equals what D was.     │
+   └──────────────────────────────────────────────────────┘
+```
+
+Each Flip-Flop independently:
+* **FF3:** D was 0 → Q becomes **0** (no change)
+* **FF2:** D was 1 → Q becomes **1** (no change)
+* **FF1:** D was 1 → Q becomes **1** ⬅ changed from 0!
+* **FF0:** D was 0 → Q becomes **0** ⬅ changed from 1!
+
+All four happen **at the exact same nanosecond**. No Flip-Flop is "first" — they all fire simultaneously when the clock wire rises.
 
 ---
 
@@ -451,6 +574,73 @@ Here is the complete architectural blueprint showing all components working toge
                                       ▼
                         [ Loops back into Flip-Flops ]
 ```
+
+---
+
+### 🔄 The Complete Loop: One Full Cycle Traced With Real Values
+
+Let's trace exactly what happens in ONE clock cycle when the counter holds `0101` (decimal 5).
+
+```
+STEP 1: THE REGISTER OUTPUTS ITS CURRENT VALUE
+─────────────────────────────────────────────────────────────────
+  The 4 Flip-Flops are holding "0101" (decimal 5).
+  Their Q output pins are outputting voltage on 4 wires:
+    FF3.Q = 0 (0V),  FF2.Q = 1 (5V),  FF1.Q = 0 (0V),  FF0.Q = 1 (5V)
+  These 4 wires feed simultaneously into:
+    → The chip's OUTPUT PINS (so the world can see count = 5)
+    → The 4-BIT ADDER's Input A
+
+
+STEP 2: THE ADDER COMPUTES count + 1
+─────────────────────────────────────────────────────────────────
+  Input A (from Register):  0101  (decimal 5)
+  Input B (hardwired):      0001  (decimal 1)
+
+  The 4 Full Adders work right-to-left (ripple carry):
+    Bit 0:  1 + 1 + 0  =  Sum=0, Carry C1=1
+    Bit 1:  0 + 0 + 1  =  Sum=1, Carry C2=0
+    Bit 2:  1 + 0 + 0  =  Sum=1, Carry C3=0
+    Bit 3:  0 + 0 + 0  =  Sum=0, Carry C4=0
+
+  Adder Output:  0110  (decimal 6)   ✅
+  This result travels down 4 wires into the MUX's Input A.
+
+
+STEP 3: THE MUX DECIDES WHAT TO PASS TO THE FLIP-FLOPS
+─────────────────────────────────────────────────────────────────
+  MUX Input A (from Adder):  0110  (count + 1 = 6)
+  MUX Input B (hardwired):   0000  (reset value)
+  Select wire (reset pin):   0     (reset NOT pressed)
+
+  Since S = 0 → Input A passes through!
+
+  4-Bit MUX output: 0110  (decimal 6)
+  This travels down 4 wires into the D (Data) pins of the Flip-Flops.
+
+
+STEP 4: THE CLOCK FIRES — FLIP-FLOPS CAPTURE THE NEW VALUE
+─────────────────────────────────────────────────────────────────
+  ⚡ CLK rises from 0V to 5V!
+
+  All 4 Flip-Flops snap simultaneously:
+    FF3: D=0 → Q becomes 0   (no change)
+    FF2: D=1 → Q becomes 1   (no change)
+    FF1: D=1 → Q becomes 1   ⬅ was 0!
+    FF0: D=0 → Q becomes 0   ⬅ was 1!
+
+  Register now holds: 0110  (decimal 6)   ✅
+
+
+STEP 5: LOOP RESTARTS IMMEDIATELY (no pause, no waiting!)
+─────────────────────────────────────────────────────────────────
+  The Q output pins now output "0110".
+  The Adder is ALREADY computing 0110 + 0001 = 0111 (decimal 7).
+  The MUX is ALREADY sitting with 0111 at its Input A.
+  Everything is ready and waiting for the NEXT clock tick!
+```
+
+The whole loop (Steps 1-4) happens **in one single clock cycle** — often in under **1 nanosecond** on modern chips.
 
 ---
 

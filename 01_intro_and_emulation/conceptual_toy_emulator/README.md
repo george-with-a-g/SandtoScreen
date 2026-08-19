@@ -9,6 +9,46 @@ This mini-project demonstrates the exact hierarchy of a digital computer inside 
 
 ---
 
+## 🤔 What is This? And How is it Different from the Verilator Lab?
+
+There are two labs in this chapter. They teach the same idea from two completely different directions:
+
+| | `conceptual_toy_emulator/` (This folder) | `lab_verilator/` |
+| :--- | :--- | :--- |
+| **Language** | Pure C++ | Verilog + C++ |
+| **Purpose** | *"See how hardware WORKS from first principles"* | *"See how engineers DESIGN hardware"* |
+| **What you write** | A software program that pretends to be transistors | An actual hardware blueprint |
+| **Who compiles it** | `g++` (normal C++ compiler) | Verilator (a hardware compiler) |
+| **Output** | Text printed to the terminal | A `.vcd` waveform file you view in GTKWave |
+
+### This lab: Learning From the Bottom Up
+
+This is **pure fiction** — a storytelling tool.
+
+You write C++ functions that **pretend** to be transistors:
+
+```cpp
+bool nmos_transistor(bool gate, bool source) {
+    return gate ? source : false;  // If gate is ON, let electricity through
+}
+```
+
+There are **no actual transistors** here. It is just if/else logic inside software.  
+But by building the exact same hierarchy that real silicon uses:
+
+```
+nmos() / pmos()  →  cmos_nand()  →  SRLatch()  →  DFlipFlop()  →  Counter4Bit()
+```
+
+...you feel and understand the architecture from the inside — **without needing Verilator, GTKWave, or any special tools**. Just `g++`, which you already have.
+
+> **Analogy:** Building a model aeroplane out of cardboard.  
+> It does not actually fly, but you understand exactly how a real one is shaped.
+
+**Run this one first.** Then go to [`lab_verilator/`](../lab_verilator/README.md) to see how professional engineers describe and simulate the same hardware.
+
+---
+
 ## 🏛️ The Hierarchy Inside `toy_emulator.cpp`
 
 ```

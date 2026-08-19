@@ -5,7 +5,40 @@
 [🏠 Section 1 Overview](../README.md) • [01. Transistors to Gates](../01_transistors_to_gates.md) • [02. FPGAs & LUTs](../02_fpgas_and_luts.md) • [03. Hardware Emulation](../03_hardware_emulation.md) • [04. Anatomy of a Chip](../04_anatomy_of_a_chip.md) • [🧪 C++ Toy Sim](../conceptual_toy_emulator/README.md) • [🔬 Verilator Lab](./README.md)
 ---
 
-## 📁 Lab Files Overview
+In this lab, you will compile a real **Verilog hardware module** into a **C++ simulation binary**, run cycle-by-cycle simulation, and produce a **`.vcd` waveform trace** that you can visually inspect with GTKWave.
+
+---
+
+## 🤔 What is This? And How is it Different from the Toy Emulator?
+
+There are two labs in this chapter. They teach the same idea from two completely different directions:
+
+| | `conceptual_toy_emulator/` | `lab_verilator/` (This folder) |
+| :--- | :--- | :--- |
+| **Language** | Pure C++ | Verilog + C++ |
+| **Purpose** | *"See how hardware WORKS from first principles"* | *"See how engineers DESIGN hardware"* |
+| **What you write** | A software program that pretends to be transistors | An actual hardware blueprint |
+| **Who compiles it** | `g++` (normal C++ compiler) | Verilator (a hardware compiler) |
+| **Output** | Text printed to the terminal | A `.vcd` waveform file you view in GTKWave |
+
+### This lab: Real Hardware Design
+
+[`counter.v`](./counter.v) is a **real hardware description** — if you sent this file to a chip foundry (like TSMC), they could etch it onto silicon and it would work as a physical chip.
+
+Verilator **compiles** the Verilog into a C++ model that simulates the chip **cycle-accurately** — meaning every simulated clock tick represents exactly one real clock tick of the physical silicon chip:
+
+```
+counter.v  →  Verilator  →  C++ model  →  Run  →  counter.vcd  →  GTKWave waveforms
+```
+
+> **Analogy:** Using CAD software to design a real aeroplane.  
+> It simulates flight physics accurately. The same file can be sent to a factory to manufacture it.
+
+**Run the [Toy Emulator](../conceptual_toy_emulator/README.md) first** to build intuition. Then come here to experience the real toolchain that professional chip designers use every day.
+
+---
+
+
 
 | File | What it is |
 | :--- | :--- |
