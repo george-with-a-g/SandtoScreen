@@ -69,13 +69,58 @@ void testing_xor_gate(){
     std::cout << "XOR(1, 1): " << (xor_out11 == LOW ? "0V (Success)" : "Fail") << "\n";
 }
 
+class LUT2 {                                                                                                                                                                           
+    private:                                                                                                                                                                               
+        uint8_t table; // 4 bits of configuration memory (SRAM)                                                                                                                            
+                                                                                                                                                                                           
+    public:                                                                                                                                                                                
+        // Program the LUT with a 4-bit truth table                                                                                                                                        
+        void configure(uint8_t truth_table_bits) {                                                                                                                                         
+            table = truth_table_bits & 0x0F; // Keep 4 bits                                                                                                                                
+        }                                                                                                                                                                                  
+                                                                                                                                                                                           
+        // Evaluate based on 2 input wires (A and B act as memory address 0..3)                                                                                                            
+        LogicLevel eval(LogicLevel a, LogicLevel b) const {                                                                                                                                
+            int address = (a << 1) | b; // 0, 1, 2, or 3                                                                                                                                   
+            return (table & (1 << address)) ? HIGH : LOW;                                                                                                                                  
+        }                                                                                                                                                                                  
+};
+
+void testing_lut(){
+    std::cout << ".....TESTING 2-INPUT FPGA LUT....." << std::endl;
+    LUT2 lut;
+
+    // 1. Program LUT as XOR Gate (0b0110)
+    std::cout << "Programming the LUT as a XOR gate" << std::endl;
+    lut.configure(0b0110);
+    std::cout << "LUT as XOR(0, 0): " << (lut.eval(LOW, LOW) == LOW ? "0V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as XOR(0, 1): " << (lut.eval(LOW, HIGH) == HIGH ? "5V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as XOR(1, 0): " << (lut.eval(HIGH, LOW) == HIGH ? "5V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as XOR(1, 1): " << (lut.eval(HIGH, HIGH) == LOW ? "0V (Success)" : "Fail") << "\n";
+
+    // 2. Program LUT as NOR Gate (0b0001)
+    std::cout << "Programming the LUT as a NOR gate" << std::endl;
+    lut.configure(0b0001);
+    std::cout << "LUT as NOR(0, 0): " << (lut.eval(LOW, LOW) == HIGH ? "5V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as NOR(0, 1): " << (lut.eval(LOW, HIGH) == LOW ? "0V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as NOR(1, 0): " << (lut.eval(HIGH, LOW) == LOW ? "0V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as NOR(1, 1): " << (lut.eval(HIGH, HIGH) == LOW ? "0V (Success)" : "Fail") << "\n";
+
+    // 3. Program LUT as AND Gate (0b1000)
+    std::cout << "Programming the LUT as a AND gate" << std::endl;
+    lut.configure(0b1000);
+    std::cout << "LUT as AND(0, 0): " << (lut.eval(LOW, LOW) == LOW ? "0V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as AND(0, 1): " << (lut.eval(LOW, HIGH) == LOW ? "0V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as AND(1, 0): " << (lut.eval(HIGH, LOW) == LOW ? "0V (Success)" : "Fail") << "\n";
+    std::cout << "LUT as AND(1, 1): " << (lut.eval(HIGH, HIGH) == HIGH ? "5V (Success)" : "Fail") << "\n";
+}
 
 int main() {
-
     //testing_not_gate();
     //testing_nand_gate();
     //testing_and_gate();
     //testing_or_gate();
-    testing_xor_gate();
+    //testing_xor_gate();
+    testing_lut();
     return 0;
 }
