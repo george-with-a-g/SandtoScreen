@@ -13,7 +13,7 @@ void testing_not_gate(){
 }
 
 void testing_nand_gate(){
-    // 2. TESTING AN AND  GATE
+    // 2. TESTING A NAND  GATE
     std::cout << ".....TESTING THE NAND GATE....." << std::endl;
     // Case 1: (0, 0) -> HIGH (5V)
     LogicLevel nand_out00 = cmos_nand(LOW, LOW);
@@ -29,10 +29,53 @@ void testing_nand_gate(){
     std::cout << "NAND(1, 1): " << (nand_out11 == LOW ? "0V (Success)" : "Fail") << "\n";
 }
 
+void testing_and_gate(){
+    std::cout << ".....TESTING THE AND GATE....." << std::endl;
+    LogicLevel and_out00 = cmos_not(cmos_nand(LOW, LOW));
+    std::cout << "AND(0, 0): " << (and_out00 == LOW ? "0V (Success)" : "Fail") << "\n";
+    LogicLevel and_out01 = cmos_not(cmos_nand(LOW, HIGH));
+    std::cout << "AND(0, 1): " << (and_out01 == LOW ? "0V (Success)" : "Fail") << "\n";
+    LogicLevel and_out10 = cmos_not(cmos_nand(HIGH, LOW));
+    std::cout << "AND(1, 0): " << (and_out10 == LOW ? "0V (Success)" : "Fail") << "\n";
+    LogicLevel and_out11 = cmos_not(cmos_nand(HIGH, HIGH));
+    std::cout << "AND(1, 1): " << (and_out11 == HIGH ? "5V (Success)" : "Fail") << "\n";
+}
+
+void testing_or_gate(){
+    std::cout << ".....TESTING THE OR GATE....." << std::endl;
+    LogicLevel or_out00 = cmos_nand(cmos_not(LOW), cmos_not(LOW));
+    std::cout << "OR(0, 0): " << (or_out00 == LOW ? "0V (Success)" : "Fail") << "\n";
+    LogicLevel or_out01 = cmos_nand(cmos_not(LOW), cmos_not(HIGH));
+    std::cout << "OR(0, 1): " << (or_out01 == HIGH ? "5V (Success)" : "Fail") << "\n";
+    LogicLevel or_out10 = cmos_nand(cmos_not(HIGH), cmos_not(LOW));
+    std::cout << "OR(1, 0): " << (or_out10 == HIGH ? "5V (Success)" : "Fail") << "\n";
+    LogicLevel or_out11 = cmos_nand(cmos_not(HIGH), cmos_not(HIGH));
+    std::cout << "OR(1, 1): " << (or_out11 == HIGH ? "5V (Success)" : "Fail") << "\n";
+}
+
+LogicLevel xor_gate_wrapper(LogicLevel a, LogicLevel b){
+    LogicLevel nand_ab = cmos_nand(a, b);
+    return cmos_nand(cmos_nand(a, nand_ab), cmos_nand(b, nand_ab));
+}
+void testing_xor_gate(){
+    std::cout << ".....TESTING THE XOR GATE....." << std::endl;
+    LogicLevel xor_out00 = xor_gate_wrapper(LOW, LOW);
+    std::cout << "XOR(0, 0): " << (xor_out00 == LOW ? "0V (Success)" : "Fail") << "\n";
+    LogicLevel xor_out01 = xor_gate_wrapper(LOW, HIGH);
+    std::cout << "XOR(0, 1): " << (xor_out01 == HIGH ? "5V (Success)" : "Fail") << "\n";
+    LogicLevel xor_out10 = xor_gate_wrapper(HIGH, LOW);
+    std::cout << "XOR(1, 0): " << (xor_out10 == HIGH ? "5V (Success)" : "Fail") << "\n";
+    LogicLevel xor_out11 = xor_gate_wrapper(HIGH, HIGH);
+    std::cout << "XOR(1, 1): " << (xor_out11 == LOW ? "0V (Success)" : "Fail") << "\n";
+}
+
 
 int main() {
 
-    testing_not_gate();
+    //testing_not_gate();
     //testing_nand_gate();
+    //testing_and_gate();
+    //testing_or_gate();
+    testing_xor_gate();
     return 0;
 }
