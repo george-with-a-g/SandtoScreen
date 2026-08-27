@@ -45,6 +45,7 @@ obj_dir/
 *.ghw
 *.tree
 *.hier
+practice_circuits/
 
 # ------------------------------------------------------------------------------
 # 3. FPGA Toolchain & Synthesis Artifacts (Yosys, nextpnr, etc.)
