@@ -1,0 +1,95 @@
+# ==============================================================================
+# Git Ignore for FROMTHETRANSISTOR (Sand to Screen)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. C / C++ Compiled Binaries & Build Artifacts
+# ------------------------------------------------------------------------------
+*.o
+*.obj
+*.so
+*.dylib
+*.dll
+*.a
+*.lib
+*.out
+*.exe
+*.elf
+*.hex
+*.d
+*.dSYM/
+*.app
+
+# Executable outputs (extensionless binaries across project)
+toy_emulator
+testgates
+test_gates
+test_*
+test*
+sim_main
+main
+V*
+
+# Build directories
+build/
+bin/
+dist/
+target/
+
+# ------------------------------------------------------------------------------
+# 2. Verilator & Hardware Simulation Artifacts
+# ------------------------------------------------------------------------------
+obj_dir/
+*.vcd
+*.fst
+*.ghw
+*.tree
+*.hier
+
+# ------------------------------------------------------------------------------
+# 3. FPGA Toolchain & Synthesis Artifacts (Yosys, nextpnr, etc.)
+# ------------------------------------------------------------------------------
+*.bin
+*.bit
+*.asc
+*.json
+*.blif
+*.edif
+*.rpt
+*.tim
+*.placed
+*.routed
+*.log
+
+# ------------------------------------------------------------------------------
+# 4. Python Bytecode & Environments (Assembler, Simulators, Tools)
+# ------------------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+env/
+ENV/
+
+# ------------------------------------------------------------------------------
+# 5. OS & Editor Configuration Files
+# ------------------------------------------------------------------------------
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editors / IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+*.bak
+.clangd/
+compile_commands.json
