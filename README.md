@@ -4,13 +4,17 @@ Hiring is hard, a lot of modern CS education is really bad, and it's hard to fin
 
 Now cleaned up and going to be software only. Closer to being real.
 
-#### Section 1: Intro: Cheating our way past the transistor -- 0.5 weeks
-- So about those transistors -- Course overview. Describe how FPGAs are buildable using transistors, and that ICs are just collections of transistors in a nice reliable package. Understand the LUTs and stuff. Talk briefly about the theory of transistors, but all projects must build on each other so we can’t build one.
-- Emulation -- Building on real hardware limits the reach of this course. Using something like Verilator will allow anyone with a computer to play.
+#### [Section 1: Intro: Cheating our way past the transistor](./01_intro_and_emulation/README.md) -- 0.5 weeks
+- [So about those transistors](./01_intro_and_emulation/01_transistors_to_gates.md) -- Course overview. Describe how FPGAs are buildable using transistors, and that ICs are just collections of transistors in a nice reliable package. Understand the LUTs and stuff. Talk briefly about the theory of transistors, but all projects must build on each other so we can’t build one.
+- [Emulation](./01_intro_and_emulation/03_hardware_emulation.md) -- Building on real hardware limits the reach of this course. Using something like Verilator will allow anyone with a computer to play.
+- [Anatomy of a Chip](./01_intro_and_emulation/04_anatomy_of_a_chip.md) -- Transistors, Adders, Multiplexers, and Flip-Flops.
+- [🧪 C++ Toy Emulator](./01_intro_and_emulation/conceptual_toy_emulator/README.md) & [🔬 Verilator Counter Lab](./01_intro_and_emulation/lab_verilator/README.md)
 
-#### Section 2: Bringup: What language is hardware coded in? -- 0.5 weeks
-- Blinking an LED(Verilog, 10) -- Your first little program! Getting the simulator working. Learning Verilog.
-- Building a UART(Verilog, 100) -- An intro chapter to Verilog, copy a real UART, introducing the concept of MMIO, though the serial port may be semihosting. Serial test echo program and led control.
+#### [Section 2: Bringup: What language is hardware coded in?](./02_bringup_and_verilog/README.md) -- 0.5 weeks
+- [Thinking in Verilog](./02_bringup_and_verilog/01_what_is_verilog.md) & [Blocking vs Non-Blocking](./02_bringup_and_verilog/02_blocking_vs_nonblocking.md) -- Hardware description, parallel execution, and avoiding race conditions.
+- [Finite State Machine (FSM) Design](./02_bringup_and_verilog/03_fsm_design.md) -- Hardware control brains.
+- [💡 Blinking an LED](./02_bringup_and_verilog/lab_blinky/README.md) (Verilog) -- Your first little program! Getting the simulator working. Learning Verilog.
+- [📡 Building a UART](./02_bringup_and_verilog/lab_uart/README.md) (Verilog) -- An intro chapter to Verilog, copy a real UART, introducing the concept of MMIO. Serial test echo program and LED control.
 
 #### Section 3: Processor: What is a processor anyway? -- 3 weeks
 - Coding an assembler(Python, 500) -- Straightforward and boring, write in python. Happens in parallel with the CPU building. Teaches you ARM assembly. Initially outputs just binary files, but changed when you write a linker.
