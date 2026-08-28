@@ -2,7 +2,11 @@
 
 ---
 ### 🧭 Section 2 Quick Links
-[🏠 Section 2 Hub](./README.md) • [01. Thinking in Verilog](./01_what_is_verilog.md) • [02. Blocking vs Non-Blocking](./02_blocking_vs_nonblocking.md) • [03. FSM Design](./03_fsm_design.md) • [💡 Lab 1: Blinky](./lab_blinky/README.md) • [📡 Lab 2: UART](./lab_uart/README.md)
+[🏠 Section 2 Hub](./README.md) • [01. Thinking in Verilog](./01_what_is_verilog.md) • [02. Blocking vs Non-Blocking](./02_blocking_vs_nonblocking.md) • [03. FSM Design](./03_fsm_design.md) • [💡 Lab 1: Blinky](./lab_blinky/README.md) • [📡 Lab 2: UART](./lab_uart/README.md) • [⚡ Verilog Cheat Sheet](./README.md#master-verilog-keywords--syntax-reference)
+---
+
+> **⚡ Quick Reference:** Need to look up a keyword or syntax rule? Check the complete [Master Verilog Keywords & Syntax Reference Table](./README.md#master-verilog-keywords--syntax-reference) in the Section 2 Hub!
+
 ---
 
 When programmers transition from software (Python, C, JavaScript) to hardware, they often struggle because they try to read Verilog like code that runs line-by-line.

@@ -35,6 +35,51 @@ By the end of this section, you will understand:
 
 ---
 
+## ⚡ Master Verilog Keywords & Syntax Reference
+
+Keep this quick reference open while writing your Verilog labs:
+
+### 1. Chip Architecture & Structure
+| Keyword | Category | What It Does in Silicon | Example |
+| :--- | :--- | :--- | :--- |
+| **`module`** | Packaging | Starts a chip blueprint and declares port pins | `module my_chip (input wire clk, output reg q);` |
+| **`endmodule`**| Packaging | Closes the chip blueprint | `endmodule` |
+| **`input`** | Ports | Pin where electricity flows **INTO** the chip | `input wire [7:0] data_in` |
+| **`output`** | Ports | Pin where electricity flows **OUT OF** the chip | `output reg [3:0] count` |
+| **`inout`** | Ports | Bidirectional pin (both input and output) | `inout wire sda` (I2C data line) |
+
+### 2. Data Types & Constants
+| Keyword | Category | What It Does in Silicon | Example |
+| :--- | :--- | :--- | :--- |
+| **`wire`** | Net | Physical copper trace connecting points (no memory) | `wire [3:0] sum;` |
+| **`reg`** | Driver | Target of procedural assignments (becomes Flip-Flop if clocked) | `reg [3:0] state;` |
+| **`parameter`** | Constant | Module-level constant customizable at instantiation | `parameter CLK_FREQ = 50_000_000;` |
+| **`localparam`**| Constant | Internal module-only constant (e.g. FSM state names) | `localparam STATE_IDLE = 2'b00;` |
+
+### 3. Logic & Execution Blocks
+| Keyword | Category | What It Does in Silicon | Example |
+| :--- | :--- | :--- | :--- |
+| **`assign`** | Combinational | Continuous electrical wiring (instant logic) | `assign y = a & b;` |
+| **`always`** | Procedural | Block triggered by sensitivity list (`@`) | `always @(posedge clk)` or `always @(*)` |
+| **`posedge`** | Clocking | Triggers on **rising edge (0V -> 5V)** | `always @(posedge clk)` (creates Flip-Flops) |
+| **`negedge`** | Clocking | Triggers on **falling edge (5V -> 0V)** | `always @(negedge reset_n)` |
+| **`begin` / `end`** | Grouping | Verilog's curly braces `{ ... }` | `if (en) begin q <= d; end` |
+
+### 4. Control & Decisions
+| Keyword | Category | What It Does in Silicon | Example |
+| :--- | :--- | :--- | :--- |
+| **`if` / `else`** | Selection | Synthesizes a priority Multiplexer | `if (sel) y = b; else y = a;` |
+| **`case` / `endcase`** | Selection | Synthesizes a clean parallel Multiplexer | `case (state) ... endcase` |
+| **`default`** | Safety | Fallback path in case statement (prevents latches) | `default: next_state = STATE_IDLE;` |
+
+### 5. Assignment Operators
+| Operator | Name | Where to Use | Hardware Synthesized |
+| :---: | :--- | :--- | :--- |
+| **`=`** | **Blocking** | Inside `always @(*)` and `assign` | Pure combinational logic gates & MUXes |
+| **`<=`** | **Non-Blocking** | Inside `always @(posedge clk)` | Clocked parallel D Flip-Flops (Registers) |
+
+---
+
 ## 🧭 Navigation
 | ⬅️ Previous Section | 🏠 Root Overview | ➡️ Next Section |
 | :--- | :---: | ---: |
