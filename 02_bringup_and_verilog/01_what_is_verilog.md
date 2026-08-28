@@ -110,34 +110,45 @@ An `always` block runs whenever the signals in its **sensitivity list** change.
 #### A. Clocked Sequential Logic (Creates D Flip-Flops!)
 ```verilog
 // 1-Bit D Flip-Flop with Active-High Synchronous Reset
-reg q;
+module d_flip_flop (
+    input  wire clk,    // Clock signal
+    input  wire reset,  // Active-high reset
+    input  wire d,      // Data input
+    output reg  q       // Registered output (Q)
+);
 
-always @(posedge clk) begin
-    if (reset) begin
-        q <= 1'b0;      // Reset Q to 0 on rising clock edge
-    end else begin
-        q <= d;         // Capture input D into Q on rising clock edge
+    always @(posedge clk) begin
+        if (reset) begin
+            q <= 1'b0;  // Reset Q to 0 on rising clock edge
+        end else begin
+            q <= d;     // Capture input D into Q on rising clock edge
+        end
     end
-end
+
+endmodule
 ```
 * The `@(posedge clk)` tells the compiler: *"Create a physical D Flip-Flop! Only update `q` on the rising edge of the clock wire (0V to 5V)."*
 
 #### B. Combinational Procedural Logic (Creates MUXes, Decoders, ALUs)
 ```verilog
 // 4-to-1 Multiplexer written with a clean case statement
-reg [3:0] out;
-wire [1:0] sel;
-wire [3:0] in0, in1, in2, in3;
+module mux4 (
+    input  wire [1:0] sel,             // 2-bit selection wire
+    input  wire [3:0] in0, in1, in2, in3, // Four 4-bit data candidates
+    output reg  [3:0] out              // 4-bit selected output
+);
 
-always @(*) begin
-    case (sel)
-        2'b00: out = in0;
-        2'b01: out = in1;
-        2'b10: out = in2;
-        2'b11: out = in3;
-        default: out = 4'b0000;
-    endcase
-end
+    always @(*) begin
+        case (sel)
+            2'b00: out = in0;
+            2'b01: out = in1;
+            2'b10: out = in2;
+            2'b11: out = in3;
+            default: out = 4'b0000;
+        endcase
+    end
+
+endmodule
 ```
 * The `@(*)` means *"wake up whenever ANY input changes"*. Because there is no clock, this synthesizes to pure logic gates and multiplexers (no Flip-Flops).
 
