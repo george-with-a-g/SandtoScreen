@@ -55,42 +55,42 @@ In computer history, two major philosophies emerged for designing an ISA:
 
 ## 🏛️ The 16 ARM Core Registers (`R0` – `R15`)
 
-Inside an ARM processor, there is a bank of **16 high-speed 32-bit registers** called the **Register File**. 
+As introduced in [00. Assembly from Scratch](./00_assembly_from_scratch.md), the CPU keeps 16 high-speed sticky notes right on its desk. 
 
-Every computation (addition, subtraction, logic) operates directly on these registers:
+In physical silicon, each of these 16 registers is **literally 32 D Flip-Flops wired side-by-side** to store a 32-bit number. The hardware component that holds them all is called the **Register File** (`register_file.v`):
 
 ```
                   ┌──────────────────────────────────────────────┐
                   │          THE ARM 32-BIT REGISTER FILE        │
                   ├───────────┬──────────────────────────────────┤
-                  │  R0 – R3  │ Argument / Scratch Registers     │
+                  │  R0 – R3  │ Function Arguments & Math Scratch│
                   │  R4 – R11 │ General-Purpose Variable Storage │
-                  │  R12 (IP) │ Intra-Procedure Scratch Register │
+                  │  R12 (IP) │ Temporary Scratchpad Register    │
                   ├───────────┼──────────────────────────────────┤
                   │  R13 (SP) │ Stack Pointer (Points to RAM)    │
-                  │  R14 (LR) │ Link Register (Return Address)   │
-                  │  R15 (PC) │ Program Counter (Current Address)│
+                  │  R14 (LR) │ Link Register (The Bookmark)     │
+                  │  R15 (PC) │ Program Counter (Current Pointer)│
                   └───────────┴──────────────────────────────────┘
 ```
 
 ### The 3 Special Purpose Registers:
 
 1. **`R13 / SP` (Stack Pointer):**
-   * Holds the memory address of the top of the Call Stack in RAM. Used for local variables and function stack frames.
+   * A memory address pointing to a scratchpad area in RAM. When the CPU runs out of registers to hold variables, it temporarily spills extra data into RAM at the address pointed to by `SP`.
 
-2. **`R14 / LR` (Link Register):**
-   * When you call a function using the Branch-with-Link instruction (`BL my_function`), the CPU automatically saves the **return address** into `LR`. When the function finishes, jumping back is as simple as `MOV PC, LR`!
+2. **`R14 / LR` (Link Register / The Bookmark):**
+   * Think of `LR` as an automatic bookmark! When you jump to a subroutine function (`BL my_function`), the CPU automatically saves the address of the next instruction into `LR`. When your function is done, jumping right back to where you left off is as simple as: `MOV PC, LR`!
 
 3. **`R15 / PC` (Program Counter):**
-   * Holds the memory address of the instruction being fetched. As the CPU runs, the `PC` automatically increments by `4` on every instruction (since each 32-bit instruction is 4 bytes wide).
+   * A finger pointing at the instruction currently being executed in RAM. As the clock ticks, the `PC` automatically advances by `4` on every step (since every ARM instruction is 4 bytes wide).
 
 ---
 
 ## 🚩 The Current Program Status Register (`CPSR`)
 
-Along with the 16 registers, the CPU contains a special 32-bit status register named **`CPSR`**. 
+Along with the 16 registers, the CPU contains a special status register named **`CPSR`**. 
 
-The top 4 bits of `CPSR` are the **Condition Code Flags (NZCV)**. Whenever you run arithmetic or comparison instructions (like `CMP R0, #10` or `ADDS`), the hardware automatically sets these 4 flags:
+The top 4 bits of `CPSR` are the **Scoreboard Flags (NZCV)**. Whenever you run arithmetic or comparisons (`CMP`, `ADDS`, `SUBS`), the ALU automatically flips these 4 scoreboard lights:
 
 ```
   Bit 31       Bit 30       Bit 29       Bit 28             Bits 27 ... 0
@@ -100,12 +100,18 @@ The top 4 bits of `CPSR` are the **Condition Code Flags (NZCV)**. Whenever you r
  └────────────┴────────────┴────────────┴────────────┴────────────────────────┘
 ```
 
-| Flag | Name | When Hardware Turns It ON (1) |
-| :---: | :--- | :--- |
-| **`N`** | **Negative** | Set to `1` if the result of the calculation is negative (Bit 31 is 1). |
-| **`Z`** | **Zero** | Set to `1` if the result of the calculation was **exactly zero** (e.g. `5 - 5 = 0`). |
-| **`C`** | **Carry Out** | Set to `1` if an unsigned addition resulted in a carry (e.g. overflow beyond 32 bits). |
-| **`V`** | **oVerflow** | Set to `1` if a signed calculation overflowed (e.g. positive + positive = negative). |
+### 💡 Demystifying the 4 Flags:
+
+In binary hardware, the **Most Significant Bit (Bit 31)** represents the sign:
+* If Bit 31 is **`0`**, the number is **Positive**.
+* If Bit 31 is **`1`**, the number is **Negative** (Two's Complement).
+
+| Flag | Name | Plain English Meaning | Concrete Math Example |
+| :---: | :--- | :--- | :--- |
+| **`Z`** | **Zero** | The result was **exactly zero**. | `CMP R0, R1` when `R0 = 5` and `R1 = 5`. Since `5 - 5 = 0`, **`Z = 1`**. |
+| **`N`** | **Negative** | The result was **negative** (Bit 31 is `1`). | `3 - 5 = -2`. In 32-bit binary, `-2` has Bit 31 set to `1`, so **`N = 1`**. |
+| **`C`** | **Carry** | Unsigned math **rolled past the limit** (like a car odometer rolling past 999,999). | Adding `1` to `0xFFFFFFFF` (4.2 billion) wraps around to `0`, so **`C = 1`**. |
+| **`V`** | **Overflow** | Signed math **accidentally flipped signs**! (Positive + Positive = Negative). | Adding two huge positive numbers spills into Bit 31, making the answer negative! **`V = 1`**. |
 
 ---
 

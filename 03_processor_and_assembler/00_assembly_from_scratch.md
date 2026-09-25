@@ -33,22 +33,36 @@ Think of a computer CPU as a **very fast, very literal person sitting at an offi
   │  └───────────────────────────┘         └─────────────────────────────┘  │
   └────────────────────────────────────┬────────────────────────────────────┘
                                        │
-                                       │ Walk across the room
+                                       │ Walk across the room: LDR & STR
                                        ▼
   ┌─────────────────────────────────────────────────────────────────────────┐
-  │                     THE WAREHOUSE BOOKSHELF (THE RAM)                   │
+  │                   THE BOOKSHELF IN THE ROOM (THE RAM)                   │
   │                                                                         │
-  │  A massive wall of millions of numbered cubbies.                        │
-  │  Holds all your long-term data and program instructions.                │
-  │  To use something, you have to walk over, fetch it to your desk (LDR),  │
-  │  or walk over and put something back on the shelf (STR).                │
+  │  Fast, temporary working memory. Holds currently running programs and   │
+  │  active variables. Erased when power turns off.                         │
+  │  • LDR (Load Register): Walk over, grab a value, put it on your desk.   │
+  │  • STR (Store Register): Take an answer from your desk, save it in RAM. │
+  └────────────────────────────────────┬────────────────────────────────────┘
+                                       │
+                                       │ Drive across town (File I/O in Section 5)
+                                       ▼
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                 THE WAREHOUSE ACROSS TOWN (THE SSD / SD CARD)           │
+  │                                                                         │
+  │  Massive, non-volatile long-term storage (files, photos, OS).           │
+  │  Notice: The CPU CANNOT talk directly to an SSD using LDR or STR!       │
+  │  Before a program can run, it must first be copied from SSD into RAM!   │
   └─────────────────────────────────────────────────────────────────────────┘
 ```
 
+> **⚡ Hardware Connection to Section 1:**  
+> Remember the **1-bit D Flip-Flop** you studied in Section 1 and built in Section 2 (`practice_circuits/dff.v`)?  
+> A 32-bit register like **`R0`** is **literally thirty-two D Flip-Flops wired side-by-side to the same clock wire**! Having 16 registers simply means you have 16 of these 32-bit flip-flop banks sitting right on the silicon die next to the calculator.
+
 Everything a CPU does all day is just this person repeating three actions:
-1. Look at a sticky note on the desk.
-2. Punch two numbers into the desktop calculator.
-3. Write the answer onto another sticky note.
+1. Look at a sticky note on the desk (Register).
+2. Punch numbers into the desktop calculator (ALU).
+3. Write the answer onto another sticky note (or store it on the bookshelf with `STR`).
 
 ---
 
@@ -58,7 +72,9 @@ Whenever you see a scary computer engineering term in this course, refer back to
 
 | The Technical Term | What It Actually Means | The Plain English Translation |
 | :--- | :--- | :--- |
-| **Register** | A tiny storage box on the CPU chip | A **sticky note on your desk** labeled with a name like `R0`, `R1`, or `R2`. |
+| **Register** | 32 D Flip-Flops right on the CPU die | A **sticky note on your desk** labeled with a name like `R0`, `R1`, or `R2`. |
+| **LDR (Load)** | Read a 32-bit word from RAM | Walk to the bookshelf, copy a value, and write it onto a sticky note on your desk. |
+| **STR (Store)** | Write a 32-bit word into RAM | Take a value from a sticky note on your desk and save it onto a shelf in RAM. |
 | **Mnemonic** | A human-readable operation name | A short nickname for a command: `ADD` (Add), `SUB` (Subtract), `MOV` (Move/Copy). |
 | **Immediate (`#`)** | A constant raw number | A literal number written in your code, like `#5` or `#42`, not a register. |
 | **Operand** | An input to an operation | The ingredients of the math (e.g. In `x + y`, `x` and `y` are the operands). |

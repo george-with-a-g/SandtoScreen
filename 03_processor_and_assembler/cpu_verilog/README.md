@@ -55,6 +55,34 @@ In this project, you construct a complete **32-bit ARM7 (ARMv4T-compatible) Pipe
 
 ---
 
+## 🪜 The 4-Milestone Construction Path
+
+Don't let the 280 lines of [`cpu_core.v`](./cpu_core.v) overwhelm you! The entire CPU is constructed by connecting 4 simple building blocks you already know from Section 1 and Section 2:
+
+```
+  Section 1 & 2 Building Blocks          ARM7 CPU Sub-Modules
+  ┌─────────────────────────────┐        ┌─────────────────────────────┐
+  │ Half/Full Adders & MUXes    ├───────►│ Milestone 1: The ALU        │
+  │ D Flip-Flops (Registers)    ├───────►│ Milestone 2: Register File  │
+  │ Wire Slicing bitfields      ├───────►│ Milestone 3: Decoder        │
+  │ Pipeline DFFs + Forwarding  ├───────►│ Milestone 4: CPU Core       │
+  └─────────────────────────────┘        └─────────────────────────────┘
+```
+
+1. **Milestone 1: The ALU ([`alu.v`](./alu.v))**
+   * In Section 1, you built half and full adders.
+   * The 32-bit ALU is simply an adder combined with a `case (opcode)` multiplexer that supports `ADD`, `SUB`, `AND`, `ORR`, and calculates the 4 scoreboard flags (`N`, `Z`, `C`, `V`).
+2. **Milestone 2: The Register File ([`register_file.v`](./register_file.v))**
+   * In Section 1 & 2, you built D Flip-Flops (`dff.v`).
+   * The register file is sixteen 32-bit registers (`reg [31:0] regs [15:0]`). Two multiplexers read two registers simultaneously (`r1_data`, `r2_data`), and an `always @(posedge clk)` block writes back the result when `we == 1`.
+3. **Milestone 3: The Instruction Decoder ([`decoder.v`](./decoder.v))**
+   * A pure combinational block that slices the 32-bit instruction into control signals: Condition (`inst[31:28]`), Opcode (`inst[24:21]`), `Rn`, `Rd`, and `Rm`.
+4. **Milestone 4: The 3-Stage Pipeline & Bypass ([`cpu_core.v`](./cpu_core.v))**
+   * Ties Fetch, Decode, and Execute together using pipeline flip-flops (`fd_inst`, `de_inst`).
+   * Adds the bypass multiplexer (`forward_r1`, `forward_r2`) so back-to-back instructions never have to wait for the register file.
+
+---
+
 ## 🚀 How to Build and Simulate the CPU
 
 Run the pre-configured tests using `make`:

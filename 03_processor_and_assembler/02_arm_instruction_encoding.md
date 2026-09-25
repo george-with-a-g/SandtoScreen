@@ -74,7 +74,31 @@ These instructions perform arithmetic or logic inside the ALU:
   * `0` = Leave flags unchanged.
 * **`Rn [19:16]`**: First operand register (e.g. `R2` = `0010`).
 * **`Rd [15:12]`**: Destination register where the answer is written (e.g. `R1` = `0001`).
-* **`Operand 2 [11:0]`**: The second operand (8-bit immediate value with 4-bit rotate, or shifted register `Rm`).
+* **`Operand 2 [11:0]`**: The second operand (12 bits total: shifted register `Rm` or rotated immediate).
+
+---
+
+### 💡 The "Squeeze Problem": Why can't we load any 32-bit number?
+
+A beginner will naturally ask:  
+> *"If ARM registers hold 32-bit numbers, why can't I just write `MOV R0, #0x12345678`?"*
+
+Look at the **32-Bit Math Budget**:
+* Every instruction must fit in exactly **32 bits**.
+* Condition field takes **4 bits**.
+* Format & Opcode take **7 bits**.
+* Two register addresses (`Rn` and `Rd`) take **8 bits**.
+* Set flags bit takes **1 bit**.
+* **Total bits already spent: 20 bits!**
+* **Bits remaining for the number: 32 - 20 = 12 bits!**
+
+You physically **cannot squeeze a 32-bit number into a 12-bit slot**.
+
+To solve this, ARM uses a clever trick:
+* **8 bits** store the core number (any value from 0 to 255).
+* **4 bits** store a circular rotation (rotate right by 2 * rot).
+
+This acts like **scientific notation in binary**: you store the significant digits and shift them to wherever you need them (allowing numbers like `0x1000`, `0x00FF0000`, or `0x10000000`). If you ever need an arbitrary 32-bit constant, you load it from RAM using `LDR`!
 
 ---
 
@@ -120,11 +144,12 @@ These instructions read from or write to RAM:
   * **`1` = `LDR` (Load from Memory into Register `Rd`)**
   * **`0` = `STR` (Store from Register `Rd` into Memory)**
 * **`B [22]` (Byte / Word)**:
-  * `0` = 32-bit Word access.
+  * `0` = 32-bit Word access (4 bytes).
   * `1` = 8-bit Byte access (`LDRB` / `STRB`).
-* **`Rn [19:16]`**: Base address register in RAM.
-* **`Rd [15:12]`**: Source / Destination register.
-* **`Offset [11:0]`**: 12-bit memory address offset (e.g. `[Rn, #4]`).
+* **`Rn [19:16]`**: Base address register in RAM (where to look).
+* **`Rd [15:12]`**: Register to receive the data (`LDR`) or send the data (`STR`).
+* **`Offset [11:0]`**: 12-bit distance added to `Rn` (e.g. `[Rn, #4]`).
+* *(Note: Bits `P`, `U`, `W` control advanced address auto-indexing; standard code uses `P=1, U=1, W=0` for simple offset addition).*
 
 ---
 

@@ -83,7 +83,33 @@ When an instruction is in the **EXECUTE** stage:
 
 ---
 
-## 🌪️ Pipeline Hazards & Branch Flushing
+## 🌪️ Hazard 1: Data Hazards & Operand Forwarding
+
+What happens when two back-to-back instructions share a variable?
+
+Look at this sequence:
+```armasm
+MOV R0, #10      @ Instruction 1: writes to R0
+ADD R1, R0, #5   @ Instruction 2: reads from R0
+```
+
+Trace how these two instructions move through the pipeline:
+* **Cycle 2:** `MOV` is in **EXECUTE** (calculating the value 10). At the exact same time, `ADD` is in **DECODE** (reading register `R0` from the register file).
+* **The Problem:** `MOV` only writes `10` into the register file at the *end* of Cycle 2. If `ADD` reads the register file during Cycle 2, it reads old, stale data! This is called a **Read-After-Write (RAW) Data Hazard**.
+
+### The Solution: Operand Forwarding (The Bypass Wire)
+Instead of stalling the CPU and waiting for the answer to be written into the register file, hardware adds a direct shortcut:
+> **The Bypass Wire:** If the hardware detects that the destination register of the executing instruction (`rf_waddr`) matches a source register of the decoding instruction (`Rn` or `Rm`), it forwards the ALU output **directly to the ALU inputs** without waiting for the register file!
+
+In our Verilog core ([`cpu_core.v`](./cpu_verilog/cpu_core.v)), this is handled by simple multiplexer logic:
+```verilog
+wire forward_r1 = rf_we && (rf_waddr != 4'd15) && (rf_waddr == dec_rn);
+wire [31:0] actual_r1 = forward_r1 ? rf_wdata : rf_r1_data;
+```
+
+---
+
+## 🌪️ Hazard 2: Control Hazards & Branch Flushing
 
 What happens when your code hits a jump instruction (like `B target` or `BL my_function`)?
 
