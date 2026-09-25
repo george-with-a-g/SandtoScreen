@@ -17,6 +17,7 @@ Now cleaned up and going to be software only. Closer to being real.
 - [📡 Building a UART](./02_bringup_and_verilog/lab_uart/README.md) (Verilog) -- An intro chapter to Verilog, copy a real UART, introducing the concept of MMIO. Serial test echo program and LED control.
 
 #### [Section 3: Processor: What is a processor anyway?](./03_processor_and_assembler/README.md) -- 3 weeks
+- [Assembly from Scratch: The Gentle Onramp](./03_processor_and_assembler/00_assembly_from_scratch.md) -- The Office Desk model, Jargon Buster, Variables to Registers, and Scoreboard Flags.
 - [What is an ISA & The ARM7 Architecture](./03_processor_and_assembler/01_what_is_an_isa.md) -- Registers, CPSR flags, and RISC vs CISC.
 - [ARM Instruction Encoding](./03_processor_and_assembler/02_arm_instruction_encoding.md) -- Packing 32-bit machine code bitfields.
 - [3-Stage CPU Pipeline Architecture](./03_processor_and_assembler/03_cpu_pipeline_architecture.md) -- Fetch, Decode, Execute, Hazards & Branch flushing.

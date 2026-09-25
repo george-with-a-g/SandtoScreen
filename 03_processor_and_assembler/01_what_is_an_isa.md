@@ -2,7 +2,7 @@
 
 ---
 ### 🧭 Section 3 Quick Links
-[🏠 Section 3 Hub](./README.md) • [01. What is an ISA?](./01_what_is_an_isa.md) • [02. ARM Instruction Encoding](./02_arm_instruction_encoding.md) • [03. Pipeline Architecture](./03_cpu_pipeline_architecture.md) • [🐍 Python Assembler](./assembler/README.md) • [⚡ ARM7 Verilog CPU](./cpu_verilog/README.md) • [🚀 BootROM](./bootrom/README.md)
+[🏠 Section 3 Hub](./README.md) • [00. Assembly from Scratch](./00_assembly_from_scratch.md) • [01. What is an ISA?](./01_what_is_an_isa.md) • [02. ARM Instruction Encoding](./02_arm_instruction_encoding.md) • [03. Pipeline Architecture](./03_cpu_pipeline_architecture.md) • [🐍 Python Assembler](./assembler/README.md) • [⚡ ARM7 Verilog CPU](./cpu_verilog/README.md) • [🚀 BootROM](./bootrom/README.md)
 ---
 
 When programmers talk about a computer, they often think of high-level code: `if (x == 5) { y = 10; }`.
@@ -207,6 +207,6 @@ What return address does the hardware automatically save into `R14 (Link Registe
 ---
 
 ## 🧭 Navigation
-| ⬅️ Previous Section | 🏠 Section 3 Hub | ➡️ Next Chapter |
+| ⬅️ Previous Chapter | 🏠 Section 3 Hub | ➡️ Next Chapter |
 | :--- | :---: | ---: |
-| [⬅️ Section 2 Hub](../02_bringup_and_verilog/README.md) | [Section 3 Hub](./README.md) | [02. ARM Instruction Encoding ➡️](./02_arm_instruction_encoding.md) |
+| [⬅️ 00. Assembly from Scratch](./00_assembly_from_scratch.md) | [Section 3 Hub](./README.md) | [02. ARM Instruction Encoding ➡️](./02_arm_instruction_encoding.md) |
